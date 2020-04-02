@@ -1,0 +1,12 @@
+crosstype: riself
+geno: sl23_geno.csv
+pheno: pink_flexible_randomised.csv
+gmap: sl23_gmap.csv
+pmap: sl23_pmap.csv
+alleles:
+  - A
+  - B
+genotypes:
+  A: 1
+  H: 2
+  B: 3

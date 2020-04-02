@@ -2,3 +2,7 @@
 .Rhistory
 .RData
 .Ruserdata
+
+*
+!*.R
+!sl23_control.yaml
