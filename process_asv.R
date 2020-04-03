@@ -10,7 +10,7 @@ suppressPackageStartupMessages({
 })
 
 theme_set(theme_pubr(border = T, legend = "right"))
-set.seed(32768)
+set.seed(56753)
 
 
 # data loading ------------------------------------------------------------
@@ -60,6 +60,12 @@ asvs_to_keep <- !(
 )
 # remove zero-count ASVs
 asvs_to_keep <- asvs_to_keep & (rowSums(asv_counts) > 0)
+
+# filter and renumber ASV table
+asv_taxonomy <- asv_taxonomy[asvs_to_keep, ]
+asv_taxonomy$asv <- 1:nrow(asv_taxonomy)
+saveRDS(asv_taxonomy, file = "asv_taxonomy.rds", compress = "xz")
+
 
 # ASV CSS normalisation ---------------------------------------------------
 # ADFs needed by metagenomeSeq MR experiments
@@ -114,7 +120,7 @@ cat(sprintf(
 
 
 plotOrd(asv_css_filtered_normalised, usePCA = F, useDist = T, bg = accession_group, pch = 21)
-legend("topright", levels(accession_group), text.col = 1:5)
+legend("bottomright", levels(accession_group), text.col = 1:5)
 
 
 # make cut-offs for: stochastic, core, and variable -----------------------
@@ -147,7 +153,7 @@ css_statistics_rhiz <- as.data.frame(t(apply(asv_css_filtered_normalised[, acces
 
 # visualise groups
 ggplot(css_statistics_rhiz, aes(x = norm_sd_nz, y = nz / n, size = (sum/max(sum))^2, fill = ecology)) +
-  geom_point(alpha = 0.1, shape = 21, color = "black") +
+  geom_point(alpha = 0.25, shape = 21, color = "black") +
   geom_hline(yintercept = core_cutoff, linetype = "dotted") +
   annotate("text", x = 0, y = core_cutoff, label = sprintf("%.0f%%", core_cutoff*100), hjust = -0.2, vjust = -0.4) +
   geom_hline(yintercept = rare_cutoff, linetype = "dotted") +
@@ -155,6 +161,7 @@ ggplot(css_statistics_rhiz, aes(x = norm_sd_nz, y = nz / n, size = (sum/max(sum)
   scale_x_continuous(expand = c(0, 0)) +
   scale_y_continuous(limits = c(0, 1), expand = c(0, 0, 0, 0.05), labels = scales::percent_format(accuracy = 1)) +
   labs(
+    title = "ASV separation based on presence/absence",
     x = "Normalised standard deviation",
     y = "% non-zero counts",
     size = "norm.sum^2"
@@ -186,8 +193,9 @@ export_css <- function(asv_mtx, selected_accessions, selected_asvs) {
   write.table(asv_df, file = asv_df_fname, sep = ",", quote = F, row.names = F, col.names = T)
   cat(sprintf("Exported %s\n", asv_df_fname))
   # create genotype-randomised table and export
-  asv_df_randomised <- as.data.frame(t(apply(asv_df, 1, function(x) { c(x[1], sample(x[-1])) })))
-  colnames(asv_df_randomised) <- colnames(asv_df)
+  # asv_df_randomised <- as.data.frame(t(apply(asv_df, 1, function(x) { c(x[1], sample(x[-1])) })))
+  # colnames(asv_df_randomised) <- colnames(asv_df)
+  asv_df_randomised <- cbind(asv_df[, 1], as.data.frame(apply(asv_df[, -1], 2, sample)))
   asv_df_randomised_fname <- sprintf("%s_%s_randomised.csv", str_to_lower(selected_accessions), str_to_lower(selected_asvs))
   write.table(asv_df_randomised, file = asv_df_randomised_fname, sep = ",", quote = F, row.names = F, col.names = T)
   cat(sprintf("Exported %s\n", asv_df_randomised_fname))
@@ -200,3 +208,12 @@ export_css(asv_css_filtered_normalised, "Pink", "Flexible")
 export_css(asv_css_filtered_normalised, "Pink", "Core")
 export_css(asv_css_filtered_normalised, "Yellow", "Flexible")
 export_css(asv_css_filtered_normalised, "Yellow", "Core")
+
+## Column-randomization à la Ben
+# mtx <- as.matrix(asv_df[, -1])
+# rownames(mtx) <- asv_df$ril_id
+# mtx_rnd <- mtx
+# for (i in 1:dim(mtx_rnd)[2]) {
+#   random_vector <- sample(mtx_rnd[1:dim(mtx_rnd)[1],i])
+#   mtx_rnd[1:dim(mtx_rnd)[1], i] <- random_vector
+# }
