@@ -19,6 +19,13 @@ ASV calling from raw 16S reads in FASTQ format.
    * `TableS2_asv_css.csv`, CSS-normalised and fitZIG filtered ASVs.
    * `TableS3_asv_taxonomy.csv`, ASV-IDs and related taxonomical lineages.
    * `TableS4_asv_css_statistics_rhizosphere.csv`, statistics calculated on TableS2 counts.
+   * `(yellow|pink)_(core|flexible).csv` and `(yellow|pink)_(core|flexible)_randomised.csv`, containing ASV counts from a subset of samples and one where the order of counts in each column are randomised.
 
 ## 3. [asv_qtl.R](asv_qtl.R)
-description.
+1. Execute after running [process_asv.R](process_asv.R), as it uses `asv_taxonomy.rds` and an ASV table as an input file.
+2. Also uses an `sl23_control.yaml` R/qtl2 control file. Is currently set up to use the supplied SL2.40 SNP map.
+3. Execute script like `Rscript asv_qtl.R INPUT_ASV_TABLE [RQTL_CONTROL_FILE]`.
+4. Output files are:
+   * `*_lod.csv`, containing the LOD scores of each supplied ASV.
+   * `*_peaks.csv`, peaks identified using a cut-off score of `LOD >= 2.5`
+   * `*_lod.pdf`, visualisation of LOD scores across the genome.
